@@ -35,6 +35,8 @@ Source2:    %{name}.logrotate
 Source3:    virtual.conf
 Source4:    ssl.conf
 Source5:    %{name}.sysconfig
+Source6:    nginx-upstream-fair.tgz
+Source7:    upstream-fair.conf
 Source100:  index.html
 Source101:  poweredby.png
 Source102:  nginx-logo.png
@@ -59,6 +61,7 @@ proxy server written by Igor Sysoev.
 
 %patch0 -p0
 %patch1 -p0
+%{__tar} zxvf %{SOURCE6}
 
 %build
 # nginx does not utilize a standard configure script.  It has its own
@@ -91,9 +94,13 @@ export DESTDIR=%{buildroot}
     --with-http_perl_module \
     --with-mail \
     --with-mail_ssl_module \
-    --with-cc-opt="%{optflags} $(pcre-config --cflags)"
+    --with-cc-opt="%{optflags} $(pcre-config --cflags)" \
+    --add-module=%{_builddir}/nginx-%{version}/nginx-upstream-fair
 make %{?_smp_mflags} 
 
+# rename the readme for nginx-upstream-fair so it doesn't conflict with the main
+# readme
+mv nginx-upstream-fair/README nginx-upstream-fair/README.nginx-upstream-fair
 
 %install
 rm -rf %{buildroot}
@@ -149,7 +156,7 @@ fi
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE CHANGES README 
+%doc LICENSE CHANGES README nginx-upstream-fair/README.nginx-upstream-fair
 %{nginx_datadir}/
 %{_sbindir}/%{name}
 %{_mandir}/man3/%{name}.3pm.gz
